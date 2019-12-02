@@ -220,8 +220,8 @@ def MOI(span_position):
     for element in elements:
         moi_xx += element.moi_xx + element.area * (element.centroid[0] - centroid(span_position)[0]) ** 2
         moi_yy += element.moi_yy + element.area * (element.centroid[1] - centroid(span_position)[1]) ** 2
-        moi_xy += element.moi_xy + element.area * (element.centroid[0] - centroid(span_position)[0]) * (
-                    element.centroid[1] - centroid(span_position)[1])
+        moi_xy += element.moi_xy + element.area * (-(element.centroid[0] - centroid(span_position)[0])) * (
+                    element.centroid[1] - centroid(span_position)[1])    #For x to the left, y to the top
 
     return moi_xx, moi_yy, moi_xy
 
