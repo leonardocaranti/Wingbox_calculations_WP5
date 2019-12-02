@@ -10,7 +10,7 @@ def ShearStress(pos_list_xz, sh_load_xz, pos_list_yz, sh_load_yz):
     for i in range(len(pos_list_yz)):
         # Get const values
         cur_Span_Loc = pos_list_yz[i]
-        V_z = sh_load_xz[i]
+        V_z = -sh_load_xz[i]    # Correct the sign
         V_x = sh_load_yz[i]
 
         MoI = moment_of_inertia.MOI(cur_Span_Loc) # xx-yy-xy
@@ -21,6 +21,10 @@ def ShearStress(pos_list_xz, sh_load_xz, pos_list_yz, sh_load_yz):
 
         # Get the wing box dimensions at a certain span wise location
         initial_values = moment_of_inertia.initial_values(cur_Span_Loc)
+
+        # TODO Add effect of torque
+        # Bredts formula q = T/2A
+
 
         # Compute the integrals
         # Because there is 4 walls only iterate to 4
@@ -39,21 +43,28 @@ def ShearStress(pos_list_xz, sh_load_xz, pos_list_yz, sh_load_yz):
                 # For the left plate
                 ds = initial_values[3]
                 y = 0
-                x = -initial_values[2]/2
+                x = initial_values[2]/2
             else:
                 # For the right plate
                 ds = initial_values[4]
                 y = 0
-                x = initial_values[2] / 2
+                x = -initial_values[2] / 2
 
             # Calculate both integrals
-            integrals += initial_values[0]*y*ds, initial_values[0]*x*ds
+            integrals[0] += initial_values[0]*y*ds
+            integrals[1] += initial_values[0]*x*ds
 
         shear_flow_basic = c1*integrals[0] + c2*integrals[1]
 
         # TODO Compute the constant shear flow
         shear_constant = 0
 
-        shear_stress_Ar.append((shear_flow_basic + shear_constant)/initial_values[0]) # q/t = tau
+        shear_stress = (shear_flow_basic + shear_constant)/initial_values[0]
+        shear_stress_Ar.append(shear_stress) # q/t = tau
+
+    plt.plot(pos_list_yz, shear_stress_Ar)
+    plt.xlabel("Span [m]")
+    plt.ylabel("Shear Stress [Pa]")
+    plt.show()
 
     return shear_stress_Ar
