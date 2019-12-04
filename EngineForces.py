@@ -34,9 +34,9 @@ def Thrustforce():
     Xloclist=[]
 
     while A==1:
-        if x>=7:
+        if x>=Eg1_width_posit:
             Eg1Fy=0
-        if x>=15:
+        if x>=Eg2_width_posit:
             Eg1Fy=0
             Eg2Fy=0
             
