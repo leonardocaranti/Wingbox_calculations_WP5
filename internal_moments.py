@@ -1,23 +1,24 @@
 from VectorlistLiftplane import *
 from VectorlistDragplane import *
 from internal_force_calculations import *
-from matplotlib import pyplot as plt
 
 #Lift plane
 positions_lift, forces_lift = Liftplaneforce()
 pos_list_lift, sh_load_lift, bend_mom_lift = int_load(forces_lift, positions_lift)
+bend_mom_lift = [-i for i in bend_mom_lift]
 
 #Drag plane
 positions_drag, forces_drag = Dragplaneforce()
 pos_list_drag, sh_load_drag, bend_mom_drag = int_load(forces_drag, positions_drag)
+sh_load_drag = [-i for i in sh_load_drag]
 
 b_2 = 28.74
 
 
-# Use this only until 27.14 [m] !!!!
+# Use this only from 0 until 27.14 [m] !!!!
 def internal_moments(span_position):    #Adjust the signs!!!
 
-    #Lift
+    # Lift
     if span_position > pos_list_lift[0] and span_position < pos_list_lift[-1]:
         count_lift = 0
         for i in range(len(pos_list_lift)):
