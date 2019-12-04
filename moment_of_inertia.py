@@ -225,14 +225,12 @@ def MOI(span_position):
 
     return moi_xx, moi_yy, moi_xy
 
-def MOA(span_position):
-    elements = cross_section(cross_section_value, span_position)
-
 
 def centr_chord(span_position):
     centr_x, centr_y = centroid(span_position)
     ch = chord(span_position)
-
+    d_over_ch = (0.2+0.65)/2 + centr_x/ch
+    return d_over_ch
 
 
 def J(span_position):
