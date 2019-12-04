@@ -1,6 +1,7 @@
 from VectorlistLiftplane import *
 from VectorlistDragplane import *
 from internal_force_calculations import *
+from matplotlib import pyplot as plt
 
 #Lift plane
 positions_lift, forces_lift = Liftplaneforce()
@@ -35,3 +36,23 @@ def internal_moments(span_position):    #Adjust the signs!!!
         print(str(span_position) + " is outside of the span positions available for bending in the drag plane")
 
     return bend_lift, bend_drag
+
+"""
+M_lift_tab, M_drag_tab = [], []
+x_drag, x_lift = [], []
+for i in range(len(bend_mom_drag)):
+    M_drag_tab.append(bend_mom_drag[i])
+    x_drag.append(pos_list_drag[i])
+
+for i in range(len(bend_mom_lift)):
+    M_lift_tab.append(bend_mom_lift[i])
+    x_lift.append(pos_list_lift[i])
+
+plt.title("Drag bending moment")
+plt.plot(x_drag, M_drag_tab)
+plt.show()
+
+plt.title("Lift bending moment")
+plt.plot(x_lift, M_lift_tab)
+plt.show()
+"""
