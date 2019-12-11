@@ -40,12 +40,12 @@ no_stringers_bott = 5                                       # Must be greater th
 
 # Case 3
 t0, t1 = 0.03, 0.03
-stringer_height_0, stringer_height_1 = 0.05, 0.05
-stringer_thickness_0, stringer_thickness_1 = 0.01, 0.01
+stringer_height_0, stringer_height_1 = 0.14, 0.14
+stringer_thickness_0, stringer_thickness_1 = 0.02, 0.02
 cross_section_value = 3  # 1 corresponds to a cross section of skins only + one central spar, 2 is skins + stringers on the top, 3 is stringers on top and bottom
 no_stringers_top = 10  # Must be greater than 1 for code to work!
 no_stringers_bott = 5  # Must be greater than 1 for code to work!
-stringer_type = 1 # 1 for l-stringers, 2 for hat stringers, 3 for I stringers, 4 for T stringers, 5 for J-stringers
+stringer_type = 2 # 1 for l-stringers, 2 for hat stringers, 3 for I stringers, 4 for T stringers, 5 for J-stringers
 
 """Random
 t0, t1 = 0.02, 0.01
@@ -146,7 +146,7 @@ class hat_stringer:
         # Moments of inertia
         moi_xx, moi_yy, moi_xy = 0, 0, 0
         for element in self.elements:
-            moi_xx, moi_yy, moi_xy = moi_xx + (element.centroid[1]-self.centroid[1])**2, moi_yy + (element.centroid[0]-self.centroid[0])**2, moi_xy + (element.centroid[1])*(-element.centroid[0])
+            moi_xx, moi_yy, moi_xy = moi_xx + element.moi_xx + element.area*(element.centroid[1]-self.centroid[1])**2, moi_yy + element.moi_yy + element.area*(element.centroid[0]-self.centroid[0])**2, moi_xy + element.moi_xy + element.area*(element.centroid[1]-self.centroid[0])*(-element.centroid[0]+self.centroid[0])
         self.moi_xx, self.moi_yy, self.moi_xy = moi_xx, moi_yy, moi_xy
 
         # Drawing
@@ -179,7 +179,7 @@ class I_stringer:
         # Moments of inertia
         moi_xx, moi_yy, moi_xy = 0, 0, 0
         for element in self.elements:
-            moi_xx, moi_yy, moi_xy = moi_xx + (element.centroid[1]-self.centroid[1])**2, moi_yy + (element.centroid[0]-self.centroid[0])**2, moi_xy + (element.centroid[1])*(-element.centroid[0])
+            moi_xx, moi_yy, moi_xy = moi_xx + element.moi_xx + element.area*(element.centroid[1]-self.centroid[1])**2, moi_yy + element.moi_yy + element.area*(element.centroid[0]-self.centroid[0])**2, moi_xy + element.moi_xy + element.area*(element.centroid[1]-self.centroid[0])*(-element.centroid[0]+self.centroid[0])
         self.moi_xx, self.moi_yy, self.moi_xy = moi_xx, moi_yy, moi_xy
 
         # Drawing
@@ -211,9 +211,7 @@ class T_stringer:
         # Moments of inertia
         moi_xx, moi_yy, moi_xy = 0, 0, 0
         for element in self.elements:
-            moi_xx, moi_yy, moi_xy = moi_xx + (element.centroid[1] - self.centroid[1]) ** 2, moi_yy + (
-                        element.centroid[0] - self.centroid[0]) ** 2, moi_xy + (element.centroid[1]) * (
-                                         -element.centroid[0])
+            moi_xx, moi_yy, moi_xy = moi_xx + element.moi_xx + element.area*(element.centroid[1]-self.centroid[1])**2, moi_yy + element.moi_yy + element.area*(element.centroid[0]-self.centroid[0])**2, moi_xy + element.moi_xy + element.area*(element.centroid[1]-self.centroid[0])*(-element.centroid[0]+self.centroid[0])
         self.moi_xx, self.moi_yy, self.moi_xy = moi_xx, moi_yy, moi_xy
 
         # Drawing
@@ -248,9 +246,7 @@ class J_stringer:
         # Moments of inertia
         moi_xx, moi_yy, moi_xy = 0, 0, 0
         for element in self.elements:
-            moi_xx, moi_yy, moi_xy = moi_xx + (element.centroid[1] - self.centroid[1]) ** 2, moi_yy + (
-                        element.centroid[0] - self.centroid[0]) ** 2, moi_xy + (element.centroid[1]) * (
-                                         -element.centroid[0])
+            moi_xx, moi_yy, moi_xy = moi_xx + element.moi_xx + element.area*(element.centroid[1]-self.centroid[1])**2, moi_yy + element.moi_yy + element.area*(element.centroid[0]-self.centroid[0])**2, moi_xy + element.moi_xy + element.area*(element.centroid[1]-self.centroid[0])*(-element.centroid[0]+self.centroid[0])
         self.moi_xx, self.moi_yy, self.moi_xy = moi_xx, moi_yy, moi_xy
 
         # Drawing
@@ -488,7 +484,7 @@ def plot_stringer(span_position):
         centr_pos_y.append(elem.centroid[1])
     plt.plot(centr_pos_x, centr_pos_y, marker=".", color="green")
     """
-    
+
     # Plot centroid
     centr = element.centroid
     plt.axvline(x=centr[0], lw=1, ls='dashed', color = "black")
@@ -540,5 +536,9 @@ def mass():
 for i in range(1,6):
     stringer_type = i
     plot_stringer(0)
+    element = cross_section(cross_section_value, 0)[-1]
+    print("Stringer type " + i + ":")
+    print("Ixx = ", element.moi_xx)
+    print()
 #plot_cross_section(0)
 """
