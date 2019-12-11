@@ -45,6 +45,7 @@ stringer_thickness_0, stringer_thickness_1 = 0.01, 0.01
 cross_section_value = 3  # 1 corresponds to a cross section of skins only + one central spar, 2 is skins + stringers on the top, 3 is stringers on top and bottom
 no_stringers_top = 10  # Must be greater than 1 for code to work!
 no_stringers_bott = 5  # Must be greater than 1 for code to work!
+stringer_type = 1 # 1 for l-stringers, 2 for hat stringers, 3 for I stringers, 4 for T stringers, 5 for J-stringers
 
 """Random
 t0, t1 = 0.02, 0.01
@@ -81,7 +82,7 @@ class beam:
         self.y_coords.append(self.y_coords[0])
 
 
-class stringer:
+class l_stringer:
 
     # The coordinates of the position are related to the position of the corner
     def __init__(self, h, t, x_coord, y_coord, theta):
@@ -90,8 +91,11 @@ class stringer:
         self.area = (h - t) * t + h * t
 
         # Calculate moment of inertia around the centroid
-        top_beam = beam(t, h - t, x_coord + h / 2 * cos(theta), y_coord + h / 2 * sin(theta), theta)
-        bott_beam = beam(h, t, x_coord + h / 2 * sin(theta), y_coord - h / 2 * cos(theta), theta)
+        top_beam = beam(t, h - t, x_coord + h / 2 * cos(theta), y_coord + h / 2 * sin(theta) - t/2*cos(theta), theta)
+        bott_beam = beam(h, t, x_coord + h / 2 * sin(theta) + t/2*cos(theta), y_coord - h / 2 * cos(theta), theta)
+        self.elements = [top_beam, bott_beam]
+        #print(self.area, top_beam.area + bott_beam.area)
+
         self.centroid = [(top_beam.centroid[0] * top_beam.area + bott_beam.centroid[0] * bott_beam.area) / (
                     top_beam.area + bott_beam.area), \
                          (top_beam.centroid[1] * top_beam.area + bott_beam.centroid[1] * bott_beam.area) / (
@@ -116,6 +120,148 @@ class stringer:
         self.x_coords.append(self.x_coords[0])
         self.y_coords.append(self.y_coords[0])
 
+
+class hat_stringer:
+    
+    #The coordinates input are the coordinates of the top left corner, with the hat pointing down 
+    def __init__(self, h, t, x_coord, y_coord, theta):              #Theta is always zerooo
+        self.height = h
+        self.thickness = t 
+        self.area = (h+t/2)*t*2 + (h+t/2)*t + 2*t*(h-t)
+
+        top_l_beam = beam(t, h+t/2, x_coord + h/2, y_coord - t/2, 0)
+        left_web = beam(h-t, t, x_coord + h, y_coord -t -(h-t)/2, 0)
+        bott_beam = beam(t, h+t/2, x_coord + h + h/2, y_coord - h-t/2, 0)
+        right_web = beam(h-t, t, x_coord + 2*h, y_coord -t -(h-t)/2, 0)
+        top_r_beam = beam(t, h+t/2, x_coord + h/2 + 2*h, y_coord - t/2, 0)
+        self.elements = [top_l_beam, left_web, bott_beam, right_web, top_r_beam]
+
+        # Centroid
+        tot_area_times_dist_x = top_l_beam.area*top_l_beam.centroid[0] + left_web.area*left_web.centroid[0] + bott_beam.area*bott_beam.centroid[0] + right_web.area*right_web.centroid[0] + top_r_beam.area*top_r_beam.centroid[0]
+        tot_area_times_dist_y = top_l_beam.area * top_l_beam.centroid[1] + left_web.area * left_web.centroid[
+            1] + bott_beam.area * bott_beam.centroid[1] + right_web.area * right_web.centroid[1] + top_r_beam.area * \
+                                top_r_beam.centroid[1]
+        self.centroid = [tot_area_times_dist_x/self.area, tot_area_times_dist_y/self.area]
+
+        # Moments of inertia
+        moi_xx, moi_yy, moi_xy = 0, 0, 0
+        for element in self.elements:
+            moi_xx, moi_yy, moi_xy = moi_xx + (element.centroid[1]-self.centroid[1])**2, moi_yy + (element.centroid[0]-self.centroid[0])**2, moi_xy + (element.centroid[1])*(-element.centroid[0])
+        self.moi_xx, self.moi_yy, self.moi_xy = moi_xx, moi_yy, moi_xy
+
+        # Drawing
+        self.x_coords = [x_coord, x_coord+h+t/2, x_coord+h+t/2, x_coord+2*h-t/2, x_coord+2*h-t/2, x_coord+3*h, x_coord+3*h, x_coord+2*h+t/2, x_coord+2*h+t/2, x_coord+h-t/2, x_coord+h-t/2, x_coord]
+        self.y_coords = [y_coord, y_coord, y_coord-h, y_coord-h, y_coord, y_coord, y_coord-t, y_coord-t, y_coord-t-h, y_coord-t-h, y_coord-t, y_coord-t]
+        self.x_coords.append(self.x_coords[0])
+        self.y_coords.append(self.y_coords[0])
+
+
+class I_stringer:
+
+    # The coordinates input are the coordinates of the centroid
+    def __init__(self, h, t, x_coord, y_coord, theta):              #Theta is always zerooo
+        self.height = h
+        self.thickness = t
+        self.area = 2*h*t + (h-t)*t
+
+        # Stringer elements
+        top_beam = beam(t, h, x_coord, y_coord + h/2, 0)
+        web = beam(h-t, t, x_coord, y_coord, 0)
+        bott_beam = beam(t, h, x_coord, y_coord - h/2, 0)
+        self.elements = [top_beam, web, bott_beam]
+        
+        # Centroid
+        a_x, a_y = 0, 0
+        for element in self.elements:
+            a_x, a_y = a_x + element.centroid[0]*element.area, a_y + element.centroid[1]*element.area
+        self.centroid = [a_x/self.area, a_y/self.area]
+        
+        # Moments of inertia
+        moi_xx, moi_yy, moi_xy = 0, 0, 0
+        for element in self.elements:
+            moi_xx, moi_yy, moi_xy = moi_xx + (element.centroid[1]-self.centroid[1])**2, moi_yy + (element.centroid[0]-self.centroid[0])**2, moi_xy + (element.centroid[1])*(-element.centroid[0])
+        self.moi_xx, self.moi_yy, self.moi_xy = moi_xx, moi_yy, moi_xy
+
+        # Drawing
+        self.x_coords = [x_coord-h/2, x_coord+h/2, x_coord+h/2, x_coord+t/2, x_coord+t/2, x_coord+h/2, x_coord+h/2, x_coord-h/2, x_coord-h/2, x_coord-t/2, x_coord-t/2, x_coord-h/2]
+        self.y_coords = [y_coord+h/2+t/2, y_coord+h/2+t/2, y_coord+h/2-t/2, y_coord+h/2-t/2, y_coord-h/2+t/2, y_coord-h/2+t/2, y_coord-h/2-t/2, y_coord-h/2-t/2, y_coord-h/2+t/2, y_coord-h/2+t/2, y_coord+h/2-t/2, y_coord+h/2-t/2]
+        self.y_coords.append(self.y_coords[0])
+        self.x_coords.append(self.x_coords[0])
+
+
+class T_stringer:
+
+    # The coordinates input are the coordinates of the the center of vertical web
+    def __init__(self, h, t, x_coord, y_coord, theta):  # Theta is always zerooo
+        self.height = h
+        self.thickness = t
+        self.area = h * t + (h - t) * t
+
+        # Stringer elements
+        top_beam = beam(t, h, x_coord, y_coord + h / 2, 0)
+        web = beam(h - t, t, x_coord, y_coord, 0)
+        self.elements = [top_beam, web]
+
+        # Centroid
+        a_x, a_y = 0, 0
+        for element in self.elements:
+            a_x, a_y = a_x + element.centroid[0] * element.area, a_y + element.centroid[1] * element.area
+        self.centroid = [a_x / self.area, a_y / self.area]
+
+        # Moments of inertia
+        moi_xx, moi_yy, moi_xy = 0, 0, 0
+        for element in self.elements:
+            moi_xx, moi_yy, moi_xy = moi_xx + (element.centroid[1] - self.centroid[1]) ** 2, moi_yy + (
+                        element.centroid[0] - self.centroid[0]) ** 2, moi_xy + (element.centroid[1]) * (
+                                         -element.centroid[0])
+        self.moi_xx, self.moi_yy, self.moi_xy = moi_xx, moi_yy, moi_xy
+
+        # Drawing
+        self.x_coords = [x_coord - h / 2, x_coord + h / 2, x_coord + h / 2, x_coord + t / 2, x_coord + t / 2,
+                         x_coord - t / 2, x_coord - t / 2, x_coord - h / 2]
+        self.y_coords = [y_coord + h / 2 + t / 2, y_coord + h / 2 + t / 2, y_coord + h / 2 - t / 2, y_coord + h / 2 - t / 2,
+                         y_coord - h / 2 + t / 2, y_coord - h / 2 + t / 2, y_coord + h / 2 - t / 2, y_coord + h / 2 - t / 2]
+        self.y_coords.append(self.y_coords[0])
+        self.x_coords.append(self.x_coords[0])
+
+
+class J_stringer:
+
+    # The coordinates input are the coordinates of the center of vertical web
+    def __init__(self, h, t, x_coord, y_coord, theta):  # Theta is always zerooo
+        self.height = h
+        self.thickness = t
+        self.area = h * t + (h - t) * t + (h/2 + t/2) * t
+
+        # Stringer elements
+        top_beam = beam(t, h, x_coord, y_coord + h / 2, 0)
+        web = beam(h - t, t, x_coord, y_coord, 0)
+        bott_beam = beam(t, h/2+t/2, x_coord-h/2+(h+t)/4, y_coord - h / 2, 0)
+        self.elements = [top_beam, web, bott_beam]
+
+        # Centroid
+        a_x, a_y = 0, 0
+        for element in self.elements:
+            a_x, a_y = a_x + element.centroid[0] * element.area, a_y + element.centroid[1] * element.area
+        self.centroid = [a_x / self.area, a_y / self.area]
+
+        # Moments of inertia
+        moi_xx, moi_yy, moi_xy = 0, 0, 0
+        for element in self.elements:
+            moi_xx, moi_yy, moi_xy = moi_xx + (element.centroid[1] - self.centroid[1]) ** 2, moi_yy + (
+                        element.centroid[0] - self.centroid[0]) ** 2, moi_xy + (element.centroid[1]) * (
+                                         -element.centroid[0])
+        self.moi_xx, self.moi_yy, self.moi_xy = moi_xx, moi_yy, moi_xy
+
+        # Drawing
+        self.x_coords = [x_coord - h / 2, x_coord + h / 2, x_coord + h / 2, x_coord + t / 2, x_coord + t / 2,
+                         x_coord - h / 2, x_coord - h / 2, x_coord - t / 2, x_coord - t / 2, x_coord - h / 2]
+        self.y_coords = [y_coord + h / 2 + t / 2, y_coord + h / 2 + t / 2, y_coord + h / 2 - t / 2,
+                         y_coord + h / 2 - t / 2, y_coord - h / 2 - t / 2, y_coord - h / 2 - t / 2,
+                         y_coord - h / 2 + t / 2, y_coord - h / 2 + t / 2, y_coord + h / 2 - t / 2,
+                         y_coord + h / 2 - t / 2]
+        self.y_coords.append(self.y_coords[0])
+        self.x_coords.append(self.x_coords[0])
 
 def param(initial_value, final_value, span_pos):
     return span_pos * (final_value - initial_value) / b_2 + initial_value
@@ -149,13 +295,13 @@ def cross_section(value, span_position):
 
         for i in range(no_stringers_top):
             if i < no_stringers_top - 1:
-                string = stringer(stringer_height, stringer_thickness,
+                string = l_stringer(stringer_height, stringer_thickness,
                                   -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
                                   front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
                                               no_stringers_top - 1) * i, 0)
                 elements.append(string)
             else:
-                string = stringer(stringer_height, stringer_thickness,
+                string = l_stringer(stringer_height, stringer_thickness,
                                   -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
                                   front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
                                               no_stringers_top - 1) * i, -pi / 2)
@@ -163,33 +309,107 @@ def cross_section(value, span_position):
 
     if value == 3:
 
-        for i in range(no_stringers_top):
-            if i < no_stringers_top - 1:
-                string = stringer(stringer_height, stringer_thickness,
-                                  -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
-                                  front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
-                                              no_stringers_top - 1) * i, 0)
-                elements.append(string)
-            else:
-                string = stringer(stringer_height, stringer_thickness,
-                                  -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
-                                  front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
-                                              no_stringers_top - 1) * i, -pi / 2)
-                elements.append(string)
+        if stringer_type == 1: # L-stringers
 
-        for i in range(no_stringers_bott):
-            if i < no_stringers_bott - 1:
-                string = stringer(stringer_height, stringer_thickness,
-                                  -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_bott - 1) * i, -(
-                                front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
-                                    no_stringers_bott - 1) * i), pi / 2)
-                elements.append(string)
-            else:
-                string = stringer(stringer_height, stringer_thickness,
-                                  -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_bott - 1) * i, -(
-                                front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
-                                    no_stringers_bott - 1) * i), pi)
-                elements.append(string)
+            for i in range(no_stringers_top):
+                if i < no_stringers_top - 1:
+                    string = l_stringer(stringer_height, stringer_thickness,
+                                      -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
+                                      front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                                  no_stringers_top - 1) * i, 0)
+                    elements.append(string)
+                else:
+                    string = l_stringer(stringer_height, stringer_thickness,
+                                      -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
+                                      front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                                  no_stringers_top - 1) * i, -pi / 2)
+                    elements.append(string)
+
+            for i in range(no_stringers_bott):
+                if i < no_stringers_bott - 1:
+                    string = l_stringer(stringer_height, stringer_thickness,
+                                      -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_bott - 1) * i, -(
+                                    front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                        no_stringers_bott - 1) * i), pi / 2)
+                    elements.append(string)
+                else:
+                    string = l_stringer(stringer_height, stringer_thickness,
+                                      -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_bott - 1) * i, -(
+                                    front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                        no_stringers_bott - 1) * i), pi)
+                    elements.append(string)
+
+        if stringer_type==2: # Hat stringers
+
+            for i in range(no_stringers_top):
+                if i < no_stringers_top:
+                    string = hat_stringer(stringer_height, stringer_thickness,
+                                      -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
+                                      front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                                  no_stringers_top - 1) * i, 0)
+                    elements.append(string)
+
+            for i in range(no_stringers_bott):
+                if i < no_stringers_bott:
+                    string = hat_stringer(stringer_height, stringer_thickness,
+                                      -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_bott - 1) * i, -(
+                                    front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                        no_stringers_bott - 1) * i), pi / 2)
+                    elements.append(string)
+
+        if stringer_type==3: # I stringers
+
+            for i in range(no_stringers_top):
+                if i < no_stringers_top:
+                    string = I_stringer(stringer_height, stringer_thickness,
+                                      -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
+                                      front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                                  no_stringers_top - 1) * i, 0)
+                    elements.append(string)
+
+            for i in range(no_stringers_bott):
+                if i < no_stringers_bott:
+                    string = I_stringer(stringer_height, stringer_thickness,
+                                      -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_bott - 1) * i, -(
+                                    front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                        no_stringers_bott - 1) * i), pi / 2)
+                    elements.append(string)
+
+        if stringer_type==4: # I stringers
+
+            for i in range(no_stringers_top):
+                if i < no_stringers_top:
+                    string = T_stringer(stringer_height, stringer_thickness,
+                                      -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
+                                      front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                                  no_stringers_top - 1) * i, 0)
+                    elements.append(string)
+
+            for i in range(no_stringers_bott):
+                if i < no_stringers_bott:
+                    string = T_stringer(stringer_height, stringer_thickness,
+                                      -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_bott - 1) * i, -(
+                                    front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                        no_stringers_bott - 1) * i), pi / 2)
+                    elements.append(string)
+
+        if stringer_type==5: # J stringers
+
+            for i in range(no_stringers_top):
+                if i < no_stringers_top:
+                    string = J_stringer(stringer_height, stringer_thickness,
+                                      -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
+                                      front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                                  no_stringers_top - 1) * i, 0)
+                    elements.append(string)
+
+            for i in range(no_stringers_bott):
+                if i < no_stringers_bott:
+                    string = J_stringer(stringer_height, stringer_thickness,
+                                      -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_bott - 1) * i, -(
+                                    front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                        no_stringers_bott - 1) * i), pi / 2)
+                    elements.append(string)
 
     return elements
 
@@ -241,7 +461,7 @@ def J(span_position):
 def plot_cross_section(span_position):
     elements = cross_section(cross_section_value, span_position)
     for element in elements:
-        if type(element) == stringer:
+        if type(element) == l_stringer:
             colour = "black"
         if type(element) == beam:
             colour = "black"
@@ -255,6 +475,30 @@ def plot_cross_section(span_position):
 
     plt.show()
 
+def plot_stringer(span_position):
+    element = cross_section(cross_section_value, span_position)[-1]
+    plt.plot(element.x_coords, element.y_coords, color="black")
+
+    """
+    #Plot line connecting centroids
+    str_elements = element.elements
+    centr_pos_x, centr_pos_y = [], []
+    for elem in str_elements:
+        centr_pos_x.append(elem.centroid[0])
+        centr_pos_y.append(elem.centroid[1])
+    plt.plot(centr_pos_x, centr_pos_y, marker=".", color="green")
+    """
+    
+    # Plot centroid
+    centr = element.centroid
+    plt.axvline(x=centr[0], lw=1, ls='dashed', color = "black")
+    plt.axhline(y=centr[1], lw=1, ls='dashed', color = "black")
+    #plt.text(centr[0], centr[1],
+             #"Centroid: (" + str(round(centr[0], 2)) + "," + str(round(centr[1], 2)) + ")", color="green")
+
+    plt.axis("equal")
+    plt.axis("off")
+    plt.show()
 
 def chord(span_position):
     chord0, chord1 = root_dist / 0.4, tip_dist / 0.4
@@ -291,3 +535,10 @@ def mass():
 
     avg_area = (area_root + area_tip) / 2
     return density * avg_area
+
+"""
+for i in range(1,6):
+    stringer_type = i
+    plot_stringer(0)
+#plot_cross_section(0)
+"""
