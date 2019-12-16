@@ -58,7 +58,7 @@ while z<= b:
 
     z = z+dz
 
-plt.subplot(121)
+
 plt.title('Normal stress in points furthest away from neutral axis')
 plt.plot(ztab,sigma1tab, label ='point 1')
 plt.plot(ztab,sigma2tab, label = 'point 2')
@@ -67,15 +67,14 @@ plt.plot(ztab,sigma4tab, label = 'point 4')
 plt.xlabel('Spanwise position [m]')
 plt.ylabel('Stress [MPa]')
 plt.legend()
-
-plt.subplot(122)
-plt.plot(ztab,alphatab)
-plt.xlabel('Spanwise position [m]')
-plt.ylabel('NA angle [deg]')
-
 plt.show()
 
 """
+plt.title('Angle of the neutral axis')
+plt.plot(ztab,alphatab)
+plt.xlabel('Spanwise position [m]')
+plt.ylabel('Angle [deg]')
+
 plt.plot(ztab, M_xtab)
 plt.xlabel('Spanwise position')
 plt.ylabel('x-moment')
@@ -96,9 +95,6 @@ plt.plot(ztab,I_xytab)
 plt.xlabel('Spanwise position')
 plt.ylabel('MOI xy')
 
-plt.plot(ztab,alphatab)
-plt.xlabel('Spanwise position')
-plt.ylabel('NA angle')
 """
 
 
