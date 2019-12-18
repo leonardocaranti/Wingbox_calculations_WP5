@@ -39,13 +39,13 @@ no_stringers_bott = 5                                       # Must be greater th
 """
 
 # Case 3
-t0, t1 = 0.03, 0.03
-stringer_height_0, stringer_height_1 = 0.14, 0.14
-stringer_thickness_0, stringer_thickness_1 = 0.02, 0.02
+t0, t1 = 0.04, 0.02
+stringer_height_0, stringer_height_1 = 0.175, 0.14
+stringer_thickness_0, stringer_thickness_1 = 0.017, 0.013
 cross_section_value = 3  # 1 corresponds to a cross section of skins only + one central spar, 2 is skins + stringers on the top, 3 is stringers on top and bottom
-no_stringers_top = 10  # Must be greater than 1 for code to work!
-no_stringers_bott = 5  # Must be greater than 1 for code to work!
-stringer_type = 2 # 1 for l-stringers, 2 for hat stringers, 3 for I stringers, 4 for T stringers, 5 for J-stringers
+no_stringers_top = 18  # Must be greater than 1 for code to work!
+no_stringers_bott = 8  # Must be greater than 1 for code to work!
+stringer_type = 3 # 1 for l-stringers, 2 for hat stringers, 3 for I stringers, 4 for T stringers, 5 for J-stringers
 
 """Random
 t0, t1 = 0.02, 0.01
@@ -66,8 +66,8 @@ class beam:
         self.centroid = [x_coord, y_coord]
 
         # Calculate moment of inertia around the centroid
-        self.moi_xx = l * h / 12 * (l ** 2 * (cos(beta)) ** 2 + h ** 2 * (sin(beta)) ** 2)
-        self.moi_yy = l * h / 12 * (l ** 2 * (sin(beta)) ** 2 + h ** 2 * (cos(beta)) ** 2)
+        self.moi_xx = l * h / 12 * (l ** 2 * (sin(beta)) ** 2 + h ** 2 * (cos(beta)) ** 2)
+        self.moi_yy = l * h / 12 * (l ** 2 * (cos(beta)) ** 2 + h ** 2 * (sin(beta)) ** 2)
         self.moi_xy = l * h / 12 * cos(beta) * sin(beta) * (h ** 2 + l ** 2)
 
         self.x_coords = [x_coord + l / 2 * cos(beta) + h / 2 * sin(beta),
@@ -289,19 +289,61 @@ def cross_section(value, span_position):
 
     if value == 2:
 
-        for i in range(no_stringers_top):
-            if i < no_stringers_top - 1:
-                string = l_stringer(stringer_height, stringer_thickness,
-                                  -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
-                                  front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
-                                              no_stringers_top - 1) * i, 0)
-                elements.append(string)
-            else:
-                string = l_stringer(stringer_height, stringer_thickness,
-                                  -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
-                                  front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
-                                              no_stringers_top - 1) * i, -pi / 2)
-                elements.append(string)
+
+        if stringer_type == 1:  # L-stringers
+            for i in range(no_stringers_top):
+                if i < no_stringers_top - 1:
+                    string = l_stringer(stringer_height, stringer_thickness,
+                                      -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
+                                      front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                                  no_stringers_top - 1) * i, 0)
+                    elements.append(string)
+                else:
+                    string = l_stringer(stringer_height, stringer_thickness,
+                                      -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
+                                      front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                                  no_stringers_top - 1) * i, -pi / 2)
+                    elements.append(string)
+
+        if stringer_type == 2:  # Hat stringers
+
+            for i in range(no_stringers_top):
+                if i < no_stringers_top:
+                    string = hat_stringer(stringer_height, stringer_thickness,
+                                              -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
+                                              front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                                      no_stringers_top - 1) * i, 0)
+                    elements.append(string)
+
+        if stringer_type == 3:  # I stringers
+
+            for i in range(no_stringers_top):
+                if i < no_stringers_top:
+                    string = I_stringer(stringer_height, stringer_thickness,
+                                              -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
+                                              front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                                      no_stringers_top - 1) * i, 0)
+                    elements.append(string)
+
+        if stringer_type == 4:  # T stringers
+
+            for i in range(no_stringers_top):
+                if i < no_stringers_top:
+                    string = T_stringer(stringer_height, stringer_thickness,
+                                              -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
+                                              front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                                      no_stringers_top - 1) * i, 0)
+                    elements.append(string)
+
+        if stringer_type == 5:  # J stringers
+
+            for i in range(no_stringers_top):
+                if i < no_stringers_top:
+                    string = J_stringer(stringer_height, stringer_thickness,
+                                              -(dist - 2 * t) / 2 + (dist - 2 * t) / (no_stringers_top - 1) * i,
+                                              front_spar_h / 2 - t - ((front_spar_h - rear_spar_h) / 2) / (
+                                                      no_stringers_top - 1) * i, 0)
+                    elements.append(string)
 
     if value == 3:
 
@@ -434,8 +476,8 @@ def MOI(span_position):
     moi_yy = 0
     moi_xy = 0
     for element in elements:
-        moi_xx += element.moi_xx + element.area * (element.centroid[0] - centroid(span_position)[0]) ** 2
-        moi_yy += element.moi_yy + element.area * (element.centroid[1] - centroid(span_position)[1]) ** 2
+        moi_xx += element.moi_xx + element.area * (element.centroid[1] - centroid(span_position)[1]) ** 2
+        moi_yy += element.moi_yy + element.area * (element.centroid[0] - centroid(span_position)[0]) ** 2
         moi_xy += element.moi_xy + element.area * (-(element.centroid[0] - centroid(span_position)[0])) * (
                     element.centroid[1] - centroid(span_position)[1])    #For x to the left, y to the top
 
@@ -468,7 +510,8 @@ def plot_cross_section(span_position):
     plt.axhline(y=centr[1], lw=1, ls='dashed', color = "black")
     plt.title(label="Cross-section at a span position of " + str(span_position) + "[m]")
     plt.text(centr[0]*10, centr[1]*10, "Centroid: (" + str(round(centr[0],2)) + "," + str(round(centr[1],2)) + ")", color = "green")
-
+    plt.axis('equal')
+    plt.axis('off')
     plt.show()
 
 def plot_stringer(span_position):
@@ -530,7 +573,7 @@ def mass():
         area_tip += element_tip.area
 
     avg_area = (area_root + area_tip) / 2
-    return density * avg_area
+    return density * avg_area * b_2 * 2
 
 """
 for i in range(1,6):
@@ -541,4 +584,69 @@ for i in range(1,6):
     print("Ixx = ", element.moi_xx)
     print()
 #plot_cross_section(0)
+"""
+
+"""
+areatab_1, areatab_2, areatab_3, areatab_4, areatab_5 = [],[],[],[],[]
+i_a2tab_1, i_a2tab_2, i_a2tab_3, i_a2tab_4, i_a2tab_5 = [],[],[],[],[]
+dl, dA = 0.001, 1.001
+
+for i in range(1,6):
+    stringer_type = i
+    stringer_height_0, stringer_height_1 = 0.01, 0.01
+    stringer_thickness_0, stringer_thickness_1 = 0.001, 0.001
+    str = cross_section(3, 0)[-1]
+
+    for ee in range(400):
+        stringer_height_0, stringer_height_1 = stringer_height_0*dA, stringer_height_1*dA
+        stringer_thickness_0, stringer_thickness_1 = stringer_thickness_0, stringer_thickness_1
+        str = cross_section(3, 0)[-1]
+        #print(type(str))
+
+        if i == 1:
+            areatab_1.append(str.height/str.thickness)
+            i_a2tab_1.append(str.moi_xx/(str.area)**2)
+            #i_a2tab_1.append(str.moi_xx)
+        elif i==2:
+            areatab_2.append(str.height/str.thickness)
+            i_a2tab_2.append(str.moi_xx/(str.area)**2)
+            #i_a2tab_2.append(str.moi_xx)
+        elif i==3:
+            areatab_3.append(str.height/str.thickness)
+            i_a2tab_3.append(str.moi_xx/(str.area)**2)
+            #i_a2tab_3.append(str.moi_xx)
+        elif i==4:
+            areatab_4.append(str.height/str.thickness)
+            i_a2tab_4.append(str.moi_xx/(str.area)**2)
+            #i_a2tab_4.append(str.moi_xx)
+        elif i==5:
+            areatab_5.append(str.height/str.thickness)
+            i_a2tab_5.append(str.moi_xx/(str.area)**2)
+            #i_a2tab_5.append(str.moi_xx)
+
+    stringer_height_0, stringer_height_1 = 0.12, 0.12
+    stringer_thickness_0, stringer_thickness_1 = 0.02, 0.02
+
+
+areatab_1 = [areatab_1[i] for i in range(int(len(areatab_1)*1/2))]
+i_a2tab_1 = [i_a2tab_1[i] for i in range(int(len(i_a2tab_1)*1/2))]
+areatab_4 = [areatab_4[i+int(len(areatab_4)*1/2)-1] for i in range(int(len(areatab_4)/2))]
+i_a2tab_4 = [i_a2tab_4[i+int(len(i_a2tab_4)*1/2)-1] for i in range(int(len(i_a2tab_4)/2))]
+
+
+plt.title("Plot of " + r"$I_{xx}/A^2$" + "against aspect ratio")
+plt.plot(areatab_1, i_a2tab_1, label="L-stringers", color = "#091034", linestyle = "solid")
+plt.plot(areatab_2, i_a2tab_2, label="Hat-stringers", color = "#183BF0", linestyle = "solid")
+plt.plot(areatab_3, i_a2tab_3, label="I-stringers", color = "#737DB0", linestyle = "solid")
+plt.plot(areatab_4, i_a2tab_4, label="T-stringers", color = "#A88338", linestyle = "solid")
+plt.plot(areatab_5, i_a2tab_5, label="J-stringers", color = "#FFBF47", linestyle = "solid")
+plt.xlabel(r"$\frac{h}{t}$ [-]")
+plt.ylabel(r"$\frac{I_{xx}}{A^2}$ [-]")
+plt.minorticks_on()
+plt.grid(b=True, which='major', color='#bebebe', linestyle='-')
+plt.grid(b=True, which='minor', color='#e9e9e9', linestyle='-', linewidth = 0.5)
+#plt.xlim(0,0.06)
+#plt.ylabel(r"Moment of inertia [$m^2$]")
+plt.legend(loc="best",fancybox=True, shadow=True)
+plt.show()
 """
