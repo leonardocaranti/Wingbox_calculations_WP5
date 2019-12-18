@@ -38,7 +38,7 @@ z = 0.1
 sigma1tab, sigma2tab, sigma3tab, sigma4tab = [], [], [], []
 alphatab, ztab, M_xtab, M_ytab = [], [], [], []
 I_xxtab, I_yytab, I_xytab = [], [], []
-
+MoS_Tension = []
 while z<= b:
     sigma1, sigma2, sigma3, sigma4 = Normalstress(z)
     M_x, M_y = internal_moments(z)
@@ -47,9 +47,9 @@ while z<= b:
     
     
 #    if max(sigma1,sigma2, sigma3, sigma4) > 15*10**6:
-       ztab.append(z)
-       alphatab.append(NAangle(z)) 
-       sigma1tab.append(1/(414/(max(sigma1,sigma2, sigma3, sigma4)/10**6)))
+    ztab.append(z)
+    alphatab.append(NAangle(z)) 
+    MoS_Tension.append(1/(414/(max(sigma1,sigma2, sigma3, sigma4)/10**6)))
     #sigma2tab.append(414/(sigma2/10**6))
     #sigma3tab.append(414/(sigma3/10**6))
     #sigma4tab.append(414/(sigma4/10**6))
@@ -62,7 +62,7 @@ while z<= b:
     z = z+dz
 
 plt.title('Margin of safety for tensile stress')
-plt.plot(ztab,sigma1tab, label ='point 1')
+plt.plot(ztab,MoS_Tension, label ='point 1')
 #plt.plot(ztab,sigma2tab, label = 'point 2')
 #plt.plot(ztab,sigma3tab, label = 'point 3')
 #plt.plot(ztab,sigma4tab, label = 'point 4')
